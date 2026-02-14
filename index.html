@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omerta - Values & Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="auth-screen" class="flex items-center justify-center min-h-screen">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-96">
+            <h1 class="text-3xl font-bold mb-6 text-center">Omerta</h1>
+            <p class="text-gray-400 mb-4 text-center">Please Enter Your Polytoria ID to proceed!</p>
+            <input type="number" id="polytoria-id" placeholder="Polytoria User ID" class="w-full px-4 py-2 bg-gray-700 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="cf-turnstile mb-4" data-sitekey="YOUR_TURNSTILE_SITE_KEY"></div>
+            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold">Continue</button>
+        </div>
+    </div>
+
+    <div id="main-screen" class="hidden">
+        <nav class="bg-gray-800 p-4 shadow-lg">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold">Omerta</h1>
+                <div class="flex gap-4">
+                    <span id="username" class="text-gray-400"></span>
+                    <span id="balance" class="text-green-400"></span>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-4">
+            <div class="flex gap-4 mb-6">
+                <button onclick="showValues()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded font-semibold">Values</button>
+                <button onclick="showShop()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded font-semibold">Shop</button>
+            </div>
+
+            <div id="values-section" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">Item Values</h2>
+                <div id="values-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+            <div id="shop-section" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">Shop</h2>
+                <div id="shop-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/api/app.js"></script>
+</body>
+</html>
