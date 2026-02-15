@@ -16,10 +16,10 @@ export default async function handler(req, res) {
         const { action } = req.query;
 
         if (action === 'auth' && req.method === 'POST') {
-            const { polytoria_id, turnstile_token, password } = req.body;
+            const { user_id, turnstile_token } = req.body;
 
-            if (!polytoria_id || !turnstile_token) {
-                return res.json({ success: false, message: `Missing data: polytoria_id=${polytoria_id}, turnstile=${!!turnstile_token}` });
+            if (!user_id || !turnstile_token) {
+                return res.json({ success: false, message: 'Missing required fields' });
             }
 
             const cfRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
@@ -30,40 +30,19 @@ export default async function handler(req, res) {
             const cfData = await cfRes.json();
 
             if (!cfData.success) {
-                return res.json({ success: false, message: 'Turnstile failed', cf_errors: cfData['error-codes'] });
+                return res.json({ success: false, message: 'Verification failed' });
             }
 
-            const userRes = await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${polytoria_id}&select=*`, {
+            const userRes = await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${user_id}&select=*`, {
                 headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
             });
             let userData = await userRes.json();
 
             if (!userData || userData.length === 0) {
-                return res.json({ success: false, message: 'User ID not found in game database. Play the game first!' });
+                return res.json({ success: false, message: 'User ID not found. Play the game first' });
             }
 
-            const user = userData[0];
-
-            // Check if user has a password set
-            if (user.password && user.password !== '') {
-                if (!password) {
-                    return res.json({ success: false, message: 'Password required', needs_password: true });
-                }
-                
-                // Verify password
-                if (user.password !== password) {
-                    return res.json({ success: false, message: 'Invalid password' });
-                }
-            } else {
-                // No password set, warn user
-                return res.json({ 
-                    success: true, 
-                    user: user, 
-                    warning: 'No password set! Set one in-game with .password [yourpassword]' 
-                });
-            }
-
-            return res.json({ success: true, user: user });
+            return res.json({ success: true, user: userData[0] });
         }
 
         if (action === 'values' && req.method === 'GET') {
@@ -98,10 +77,10 @@ export default async function handler(req, res) {
         }
 
         if (action === 'purchase' && req.method === 'POST') {
-            const { polytoria_id, item_name, price, turnstile_token } = req.body;
+            const { user_id, item_name, price, turnstile_token } = req.body;
 
             if (!turnstile_token) {
-                return res.json({ success: false, message: 'Turnstile verification required' });
+                return res.json({ success: false, message: 'Verification required' });
             }
 
             const cfRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
@@ -112,10 +91,10 @@ export default async function handler(req, res) {
             const cfData = await cfRes.json();
 
             if (!cfData.success) {
-                return res.json({ success: false, message: 'Turnstile verification failed', cf_errors: cfData['error-codes'] });
+                return res.json({ success: false, message: 'Verification failed' });
             }
 
-            const userRes = await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${polytoria_id}&select=*`, {
+            const userRes = await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${user_id}&select=*`, {
                 headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
             });
             const userData = (await userRes.json())[0];
@@ -149,7 +128,7 @@ export default async function handler(req, res) {
 
             if (!found) inventory.push(`${item_name} x1`);
 
-            await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${polytoria_id}`, {
+            await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${user_id}`, {
                 method: 'PATCH',
                 headers: { 
                     apikey: SUPABASE_KEY, 
@@ -174,7 +153,6 @@ export default async function handler(req, res) {
 
         return res.status(404).json({ error: 'Not found' });
     } catch (error) {
-        console.error('API Error:', error);
-        return res.status(500).json({ success: false, error: error.message, stack: error.stack });
+        return res.status(500).json({ success: false, error: error.message });
     }
 }
