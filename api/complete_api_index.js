@@ -2,6 +2,12 @@ const SUPABASE_URL = "https://eoifhqfqjuzlvasiwunb.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvaWZocWZxanV6bHZhc2l3dW5iIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDMxNjE1MSwiZXhwIjoyMDg1ODkyMTUxfQ.gofumVnZhW1076LQ2nJgp__Moshn46J-F-1r8Ypc7NE";
 const TURNSTILE_SECRET = "0x4AAAAAACcvzXWdrOFFXSH6i_0yC1oH3Bc";
 
+export const config = {
+    api: {
+        bodyParser: true,
+    },
+};
+
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
