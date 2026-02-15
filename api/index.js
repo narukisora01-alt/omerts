@@ -77,7 +77,22 @@ export default async function handler(req, res) {
         }
 
         if (action === 'purchase' && req.method === 'POST') {
-            const { polytoria_id, item_name, price } = req.body;
+            const { polytoria_id, item_name, price, turnstile_token } = req.body;
+
+            if (!turnstile_token) {
+                return res.json({ success: false, message: 'Turnstile verification required' });
+            }
+
+            const cfRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ secret: TURNSTILE_SECRET, response: turnstile_token })
+            });
+            const cfData = await cfRes.json();
+
+            if (!cfData.success) {
+                return res.json({ success: false, message: 'Turnstile verification failed', cf_errors: cfData['error-codes'] });
+            }
 
             const userRes = await fetch(`${SUPABASE_URL}/rest/v1/player_data?user_id=eq.${polytoria_id}&select=*`, {
                 headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
