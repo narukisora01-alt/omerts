@@ -113,7 +113,7 @@ export default async function handler(req, res) {
         }
 
         const newCash = userData.cash - price;
-        const inventory = userData.inventory ? userData.inventory.split(',') : [];
+        const inventory = userData.inventory ? userData.inventory.split(',').filter(i => i.trim()) : [];
         let found = false;
 
         for (let i = 0; i < inventory.length; i++) {
