@@ -166,7 +166,6 @@
     </style>
 </head>
 <body class="text-white min-h-screen">
-    <!-- Auth Screen -->
     <div id="auth-screen" class="flex flex-col items-center justify-center min-h-screen p-4 gap-8">
         <div class="login-box p-10 rounded-3xl w-full max-w-lg scale-in">
             <div class="text-center mb-10">
@@ -181,24 +180,13 @@
             
             <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-400 mb-2 tracking-wide">POLYTORIA ID</label>
+                    <label class="block text-sm font-semibold text-gray-400 mb-2 tracking-wide">USER ID</label>
                     <input 
                         type="number" 
-                        id="polytoria-id" 
+                        id="user-id" 
                         placeholder="Enter your ID" 
                         class="input-glow w-full px-5 py-4 bg-black/40 rounded-xl border border-white/20 focus:outline-none focus:border-white/40 transition-all text-lg font-medium"
                     >
-                </div>
-                
-                <div id="password-field" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-400 mb-2 tracking-wide">PASSWORD</label>
-                    <input 
-                        type="password" 
-                        id="password-input" 
-                        placeholder="Enter your 16-character password" 
-                        class="input-glow w-full px-5 py-4 bg-black/40 rounded-xl border border-white/20 focus:outline-none focus:border-white/40 transition-all text-lg font-medium"
-                    >
-                    <p class="text-xs text-gray-500 mt-2 tracking-wide">Get your password in-game: type .password</p>
                 </div>
                 
                 <div class="cf-turnstile flex justify-center" data-sitekey="0x4AAAAAACcvzWqePGZJezeH"></div>
@@ -230,7 +218,6 @@
             </div>
         </div>
         
-        <!-- Game Link Section Below -->
         <div class="w-full max-w-lg slide-in" style="animation-delay: 0.2s;">
             <a 
                 href="https://polytoria.com/places/90985" 
@@ -256,9 +243,7 @@
         </div>
     </div>
 
-    <!-- Main Screen -->
     <div id="main-screen" class="hidden min-h-screen fade-in">
-        <!-- Navigation -->
         <nav class="glass-nav p-5 shadow-2xl sticky top-0 z-50">
             <div class="container mx-auto flex flex-wrap justify-between items-center gap-4">
                 <div>
@@ -288,31 +273,28 @@
         </nav>
 
         <div class="container mx-auto p-6 md:p-8">
-            <!-- Tab Buttons -->
             <div class="flex gap-4 mb-10">
                 <button 
                     onclick="showValues()" 
                     id="values-tab"
                     class="button-shine bw-gradient px-8 py-4 rounded-xl font-bold text-lg tracking-wider font-orbitron transition-all duration-300 hover:bg-white/20"
                 >
-                    📊 VALUES
+                    VALUES
                 </button>
                 <button 
                     onclick="showShop()" 
                     id="shop-tab"
                     class="button-shine bw-gradient px-8 py-4 rounded-xl font-bold text-lg tracking-wider font-orbitron transition-all duration-300 hover:bg-white/20"
                 >
-                    🛒 SHOP
+                    SHOP
                 </button>
             </div>
 
-            <!-- Values Section -->
             <div id="values-section" class="hidden">
                 <h2 class="text-4xl font-black mb-8 glow-text font-orbitron tracking-wider">ITEM VALUES</h2>
                 <div id="values-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
 
-            <!-- Shop Section -->
             <div id="shop-section" class="hidden">
                 <h2 class="text-4xl font-black mb-8 glow-text font-orbitron tracking-wider">SHOP</h2>
                 <div id="shop-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -320,7 +302,6 @@
         </div>
     </div>
 
-    <!-- Purchase Confirmation Modal -->
     <div id="purchase-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
         <div class="modal-content p-8 rounded-3xl w-full max-w-md">
             <div class="text-center mb-6">
@@ -367,58 +348,36 @@
     <script>
         let currentUser = null;
         let pendingPurchase = null;
-        let passwordRequired = false;
 
         async function login() {
-            const polyId = document.getElementById('polytoria-id').value;
+            const userId = document.getElementById('user-id').value;
             const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
-            const password = document.getElementById('password-input').value;
             
-            if (!polyId || !turnstileToken) {
-                alert('⚠️ Please complete all fields');
+            if (!userId || !turnstileToken) {
+                alert('Please complete all fields');
                 return;
-            }
-            
-            const requestBody = { 
-                polytoria_id: polyId, 
-                turnstile_token: turnstileToken 
-            };
-            
-            // Include password if field is visible or has value
-            if (passwordRequired || password) {
-                requestBody.password = password;
             }
             
             const res = await fetch('/api?action=auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify({ 
+                    user_id: userId, 
+                    turnstile_token: turnstileToken 
+                })
             });
             
             const data = await res.json();
             
-            if (data.needs_password && !passwordRequired) {
-                // Show password field
-                document.getElementById('password-field').classList.remove('hidden');
-                passwordRequired = true;
-                alert('🔒 This account requires a password');
-                return;
-            }
-            
             if (data.success) {
                 currentUser = data.user;
-                
-                if (data.warning) {
-                    alert('⚠️ ' + data.warning);
-                }
-                
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('main-screen').classList.remove('hidden');
                 document.getElementById('username').textContent = data.user.username.toUpperCase();
                 document.getElementById('balance').textContent = `$${data.user.cash.toLocaleString()}`;
                 showValues();
             } else {
-                alert('❌ ' + (data.message || 'Login failed'));
+                alert(data.message || 'Login failed');
             }
         }
 
@@ -482,7 +441,7 @@
                         </div>
                         <div class="text-right">
                             <p class="text-xs text-gray-400 tracking-wide mb-1">PRICE</p>
-                            <p class="text-3xl font-black font-orbitron">${item.price.toLocaleString()}</p>
+                            <p class="text-3xl font-black font-orbitron">$${item.price.toLocaleString()}</p>
                         </div>
                     </div>
                     <button 
@@ -490,7 +449,7 @@
                         class="button-shine w-full px-4 py-3 rounded-xl font-bold tracking-wider font-orbitron transition-all duration-300 ${item.stock <= 0 ? 'bg-gray-700/50 cursor-not-allowed' : 'bg-white/15 hover:bg-white/25 border border-white/20 hover:border-white/40'}"
                         ${item.stock <= 0 ? 'disabled' : ''}
                     >
-                        ${item.stock <= 0 ? '⚠️ OUT OF STOCK' : '✓ PURCHASE'}
+                        ${item.stock <= 0 ? 'OUT OF STOCK' : 'PURCHASE'}
                     </button>
                 `;
                 list.appendChild(card);
@@ -503,7 +462,6 @@
             document.getElementById('modal-item-price').textContent = `$${price.toLocaleString()}`;
             document.getElementById('purchase-modal').classList.remove('hidden');
             
-            // Reset turnstile
             if (window.turnstile) {
                 const container = document.getElementById('purchase-turnstile');
                 container.innerHTML = '';
@@ -526,7 +484,7 @@
             const turnstileToken = document.querySelector('#purchase-turnstile [name="cf-turnstile-response"]')?.value;
             
             if (!turnstileToken) {
-                alert('⚠️ Please complete verification');
+                alert('Please complete verification');
                 return;
             }
             
@@ -534,7 +492,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    polytoria_id: currentUser.user_id,
+                    user_id: currentUser.user_id,
                     item_name: pendingPurchase.itemName,
                     price: pendingPurchase.price,
                     turnstile_token: turnstileToken
@@ -545,16 +503,15 @@
             
             if (data.success) {
                 closePurchaseModal();
-                alert('✅ PURCHASE SUCCESSFUL!');
+                alert('PURCHASE SUCCESSFUL');
                 currentUser.cash = data.new_balance;
                 document.getElementById('balance').textContent = `$${data.new_balance.toLocaleString()}`;
                 showShop();
             } else {
-                alert('❌ ' + (data.message || 'Purchase failed').toUpperCase());
+                alert(data.message || 'Purchase failed');
             }
         }
 
-        // Close modal when clicking outside
         document.getElementById('purchase-modal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closePurchaseModal();
