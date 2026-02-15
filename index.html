@@ -59,7 +59,7 @@
                 return;
             }
             
-            const res = await fetch('/api.php?action=auth', {
+            const res = await fetch('/api?action=auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ polytoria_id: polyId, turnstile_token: turnstileToken })
@@ -83,7 +83,7 @@
             document.getElementById('values-section').classList.remove('hidden');
             document.getElementById('shop-section').classList.add('hidden');
             
-            const res = await fetch('/api.php?action=values');
+            const res = await fetch('/api?action=values');
             const data = await res.json();
             
             const list = document.getElementById('values-list');
@@ -109,7 +109,7 @@
             document.getElementById('values-section').classList.add('hidden');
             document.getElementById('shop-section').classList.remove('hidden');
             
-            const res = await fetch('/api.php?action=shop');
+            const res = await fetch('/api?action=shop');
             const data = await res.json();
             
             const list = document.getElementById('shop-list');
@@ -130,7 +130,7 @@
         }
 
         async function buyItem(itemName, price) {
-            const res = await fetch('/api.php?action=purchase', {
+            const res = await fetch('/api?action=purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
