@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         const { action } = req.query;
 
         if (action === 'auth' && req.method === 'POST') {
-            const { polytoria_id, turnstile_token } = req.body;
+            const { polytoria_id, turnstile_token, password } = req.body;
 
             if (!polytoria_id || !turnstile_token) {
                 return res.json({ success: false, message: `Missing data: polytoria_id=${polytoria_id}, turnstile=${!!turnstile_token}` });
@@ -42,7 +42,28 @@ export default async function handler(req, res) {
                 return res.json({ success: false, message: 'User ID not found in game database. Play the game first!' });
             }
 
-            return res.json({ success: true, user: userData[0] });
+            const user = userData[0];
+
+            // Check if user has a password set
+            if (user.password && user.password !== '') {
+                if (!password) {
+                    return res.json({ success: false, message: 'Password required', needs_password: true });
+                }
+                
+                // Verify password
+                if (user.password !== password) {
+                    return res.json({ success: false, message: 'Invalid password' });
+                }
+            } else {
+                // No password set, warn user
+                return res.json({ 
+                    success: true, 
+                    user: user, 
+                    warning: 'No password set! Set one in-game with .password [yourpassword]' 
+                });
+            }
+
+            return res.json({ success: true, user: user });
         }
 
         if (action === 'values' && req.method === 'GET') {
