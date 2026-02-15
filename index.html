@@ -176,7 +176,7 @@
                     <p class="text-3xl font-bold font-orbitron tracking-widest">2026</p>
                     <div class="h-[2px] w-16 bg-gradient-to-r from-transparent via-white to-transparent"></div>
                 </div>
-                <p class="text-gray-400 text-lg tracking-wide">AUTHENTICATE TO ACCESS THE MARKET</p>
+                <p class="text-gray-400 text-lg tracking-wide">AUTHENTICATE TO ACCESS SYSTEM</p>
             </div>
             
             <div class="space-y-5">
@@ -188,6 +188,17 @@
                         placeholder="Enter your ID" 
                         class="input-glow w-full px-5 py-4 bg-black/40 rounded-xl border border-white/20 focus:outline-none focus:border-white/40 transition-all text-lg font-medium"
                     >
+                </div>
+                
+                <div id="password-field" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-400 mb-2 tracking-wide">PASSWORD</label>
+                    <input 
+                        type="password" 
+                        id="password-input" 
+                        placeholder="Enter your 16-character password" 
+                        class="input-glow w-full px-5 py-4 bg-black/40 rounded-xl border border-white/20 focus:outline-none focus:border-white/40 transition-all text-lg font-medium"
+                    >
+                    <p class="text-xs text-gray-500 mt-2 tracking-wide">Get your password in-game: type .password</p>
                 </div>
                 
                 <div class="cf-turnstile flex justify-center" data-sitekey="0x4AAAAAACcvzWqePGZJezeH"></div>
@@ -356,26 +367,51 @@
     <script>
         let currentUser = null;
         let pendingPurchase = null;
+        let passwordRequired = false;
 
         async function login() {
             const polyId = document.getElementById('polytoria-id').value;
             const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+            const password = document.getElementById('password-input').value;
             
             if (!polyId || !turnstileToken) {
                 alert('⚠️ Please complete all fields');
                 return;
             }
             
+            const requestBody = { 
+                polytoria_id: polyId, 
+                turnstile_token: turnstileToken 
+            };
+            
+            // Include password if field is visible or has value
+            if (passwordRequired || password) {
+                requestBody.password = password;
+            }
+            
             const res = await fetch('/api?action=auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ polytoria_id: polyId, turnstile_token: turnstileToken })
+                body: JSON.stringify(requestBody)
             });
             
             const data = await res.json();
             
+            if (data.needs_password && !passwordRequired) {
+                // Show password field
+                document.getElementById('password-field').classList.remove('hidden');
+                passwordRequired = true;
+                alert('🔒 This account requires a password');
+                return;
+            }
+            
             if (data.success) {
                 currentUser = data.user;
+                
+                if (data.warning) {
+                    alert('⚠️ ' + data.warning);
+                }
+                
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('main-screen').classList.remove('hidden');
                 document.getElementById('username').textContent = data.user.username.toUpperCase();
