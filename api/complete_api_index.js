@@ -6,10 +6,11 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
 
-    const { action } = req.query;
+    try {
+        const { action } = req.query;
 
-    if (action === 'auth' && req.method === 'POST') {
-        const { polytoria_id, turnstile_token } = req.body;
+        if (action === 'auth' && req.method === 'POST') {
+            const { polytoria_id, turnstile_token } = req.body;
 
         const cfRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
@@ -152,4 +153,8 @@ export default async function handler(req, res) {
     }
 
     return res.status(404).json({ error: 'Not found' });
+    } catch (error) {
+        console.error('API Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
 }
